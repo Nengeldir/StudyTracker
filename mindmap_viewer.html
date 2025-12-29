@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Mindmap Visualizer</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --sidebar-bg: rgba(22, 24, 29, 0.85);
+            --sidebar-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #e6e6e6;
+            --text-secondary: #a0a0a0;
+            --accent-color: #646cff;
+            --node-bg: rgba(30, 32, 38, 0.95);
+            --node-border: rgba(100, 108, 255, 0.3);
+            --link-color: #444;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--sidebar-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .btn {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 20px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        /* Toggle Button */
+        #toggle-sidebar {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            z-index: 100;
+            background: var(--node-bg);
+            border: 1px solid var(--sidebar-border);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #toggle-sidebar:hover {
+            border-color: var(--accent-color);
+        }
+
+        /* Main Canvas */
+        #viz-container {
+            flex: 1;
+            position: relative;
+            cursor: grab;
+            overflow: hidden;
+        }
+
+        #viz-container:active {
+            cursor: grabbing;
+        }
+
+        /* SVG Styles */
+        .node foreignObject {
+            overflow: visible;
+        }
+
+        .node-content {
+            background: var(--node-bg);
+            border: 1px solid var(--node-border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            min-width: 150px;
+            max-width: 400px;
+            display: inline-block;
+            /* Prevent selecting text while dragging */
+            user-select: none; 
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .node-content:hover {
+            border-color: var(--accent-color);
+        }
+
+        .node-content h3 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        .node-content p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .link {
+            fill: none;
+            stroke: var(--link-color);
+            stroke-width: 1.5px;
+            transition: opacity 0.5s;
+        }
+
+        /* MathJax Adjustments */
+        mjx-container {
+            font-size: 110% !important;
+            color: #d0d0ff !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toggle-sidebar" onclick="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+    </div>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2>Mindmap Input</h2>
+            <button class="btn" onclick="render()">Update Map</button>
+        </div>
+        <textarea id="input-text" spellcheck="false">### **1.1 Probability**
+*   **1.1.1 Probability Spaces:** Triple $(\Omega, \mathcal{A}, P)$ where $\Omega$ is the sample space, $\mathcal{A}$ is a $\sigma$-algebra, and $P$ is a probability measure.
+    *   **Kolmogorov Axioms:** $0 \le P(A) \le 1$; $P(\Omega) = 1$; and for disjoint events $P(\bigcup_{i=1}^\infty A_i) = \sum_{i=1}^\infty P(A_i)$.
+*   **1.1.2 Random Variables:** Function $X: \Omega \to T$. Probability $P(X \in S) = P(\{\omega \in \Omega : X(\omega) \in S\})$.
+*   **1.1.3 Distributions:**
+    *   **PMF (Discrete):** $p_X(x) = P(X = x)$.
+    *   **CDF:** $P_X(x) = P(X \le x)$.
+*   **1.1.4 Continuous Distributions:** Defined by PDF $p_X$ s.t. mass $m(M) = \int_M p_X(x) dx$.
+    *   **Univariate Normal:** $N(x; \mu, \sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp \left( - \frac{(x-\mu)^2}{2\sigma^2} \right)$.
+*   **1.1.5 Joint Probability:** $P(A, B) = P(A \cap B)$.
+    *   **Sum Rule (Marginalization):** $p(x_{1:i-1}, x_{i+1:n}) = \int p(x_{1:n}) dx_i$.
+*   **1.1.6 Conditional Probability:**
+    *   **Definition:** $P(A | B) = \frac{P(A, B)}{P(B)}$.
+    *   **Product/Chain Rule:** $p(x_{1:n}) = p(x_1) \prod_{i=2}^n p(x_i | x_{1:i-1})$.
+    *   **Law of Total Probability (LOTP):** $p(x) = \int p(x | y) p(y) dy$.
+*   **1.1.7 Independence:**
+    *   **Independent ($X \perp Y$):** $p(x, y) = p(x)p(y)$.
+    *   **Conditionally Independent ($X \perp Y | Z$):** $p(x, y | z) = p(x | z)p(y | z)$.
+*   **1.1.8 Directed Graphical Models:** Generative model factorization: $p(x_{1:n}) = \prod_{i=1}^n p(x_i | \text{parents}(x_i))$.
+*   **1.1.9 Expectation:** $E[X] = \int x \cdot p(x) dx$.
+    *   **Linearity:** $E[AX + b] = AE[X] + b$.
+    *   **LOTUS:** $E[g(X)] = \int g(x) p(x) dx$.
+    *   **Tower Rule (LOTE):** $E[X] = E_Y[E_X[X | Y]]$.
+*   **1.1.10 Covariance and Variance:**
+    *   **Covariance:** $\text{Cov}[X, Y] = E[(X-E[X])(Y-E[Y])^\top] = E[XY^\top] - E[X]E[Y]^\top$.
+    *   **Variance:** $\text{Var}[X] = \text{Cov}[X, X]$.
+    *   **Properties:** $\text{Var}[AX+b] = A\text{Var}[X]A^\top$ and $\text{Var}[X+Y] = \text{Var}[X] + \text{Var}[Y] + 2\text{Cov}[X, Y]$.
+    *   **Law of Total Variance (LOTV):** $\text{Var}[X] = E_Y[\text{Var}_X[X | Y]] + \text{Var}_Y[E_X[X | Y]]$.
+*   **1.1.11 Change of Variables:** For $Y = g(X)$, $p_Y(y) = p_X(g^{-1}(y)) \cdot |\det(D g^{-1}(y))|$.
+
+### **1.2 Probabilistic Inference**
+*   **Bayes’ Rule:** $p(x | y) = \frac{p(y | x) p(x)}{p(y)}$ where $p(x | y)$ is the posterior, $p(x)$ the prior, $p(y | x)$ the likelihood, and $p(y)$ the marginal likelihood/normalizing constant.
+*   **Maximum Entropy Principle:** Select prior with least additional assumptions by maximizing $H[p] = E_{x \sim p}[-\log p(x)]$.
+*   **1.2.3 Normal Distribution Inference:** For Gaussian random vector $X \sim N(\mu, \Sigma)$:
+    *   **Multivariate PDF:** $N(x; \mu, \Sigma) = \frac{1}{\sqrt{\det(2\pi\Sigma)}} \exp \left( -\frac{1}{2} (x-\mu)^\top \Sigma^{-1} (x-\mu) \right)$.
+    *   **Conditioning:** $X_A | X_B = x_B \sim N(\mu_{A|B}, \Sigma_{A|B})$ with:
+        *   $\mu_{A|B} = \mu_A + \Sigma_{AB}\Sigma_{BB}^{-1}(x_B - \mu_B)$
+        *   $\Sigma_{A|B} = \Sigma_{AA} - \Sigma_{AB}\Sigma_{BB}^{-1}\Sigma_{BA}$
+
+### **1.3 Supervised Learning and Point Estimates**
+*   **Model:** $y_i = f_\theta(x_i) + \epsilon_i$.
+*   **Maximum Likelihood (MLE):** $\hat{\theta}_{MLE} = \text{arg max}_\theta \sum_{i=1}^n \log p(y_i | x_i, \theta)$.
+*   **Maximum A Posteriori (MAP):** $\hat{\theta}_{MAP} = \text{arg min}_\theta [-\log p(\theta) + \ell_{nll}(\theta; D_n)]$ where $\log p(\theta)$ acts as a regularizer.
+*   **Predictive Posterior:** $p(y^* | x^*, D_n) = \int p(y^* | x^*, \theta) p(\theta | D_n) d\theta$.
+*   **Credible Set:** $P(y^* \in C_\delta(x^*) | x^*, D_n) \ge 1 - \delta$.
+*   **Recursive Update:** $p^{(t+1)}(\theta) \propto p^{(t)}(\theta) \cdot p(y_{t+1} | \theta)$.
+
+### **1.4 Outlook: Decision Theory**
+*   **Optimal Decision Rule:** $a^*(x) = \text{arg max}_{a \in A} E_{y|x}[r(y, a)]$.
+*   **Squared Loss:** Optimal action is the mean $a^*(x) = E[y | x]$.
+*   **Asymmetric Loss:** Penalizes under/overestimation differently; for Gaussian $y|x$, $a^*(x) = \mu_x + \sigma_x \cdot \Phi^{-1} \left( \frac{c_1}{c_1 + c_2} \right)$</textarea>
+    </div>
+
+    <div id="viz-container"></div>
+
+    <script>
+        // ---- PARSER ----
+        function parseMarkdown(text) {
+            const lines = text.split('\n');
+            const root = { name: "Root", children: [] };
+            const stack = [{ node: root, level: -1 }]; // Level -1 for root
+
+            // Helper to get depth of * indentation
+            function getBulletLevel(line) {
+                const match = line.match(/^(\s*)\*/);
+                return match ? match[1].length + 1 : 0; // +1 to distinguish from headers
+            }
+
+            lines.forEach(line => {
+                line = line.trimEnd();
+                if (!line) return;
+
+                let content = "";
+                let level = 0;
+                let isHeader = false;
+
+                if (line.startsWith('###')) {
+                    isHeader = true;
+                    level = 0; // Headers are top level children of Root
+                    content = line.replace(/^#+\s*/, '');
+                } else if (line.trim().startsWith('*')) {
+                    // It's a list item
+                    // We calculate indentation based on the raw line
+                    // Assuming 4 spaces or 1 tab per level for simplicity in standard md
+                    // But here we rely on the parser to just find the parent with lower level
+                    
+                    // Simple logic: tab count or space count / 4
+                    const leadingSpaces = line.match(/^\s*/)[0].length;
+                    level = Math.floor(leadingSpaces / 2) + 1; // logical depth
+                    content = line.trim().replace(/^\*\s*/, '');
+                } else {
+                    return; // Skip other lines
+                }
+
+                // Node object structure
+                // We split content into title and details if there's a colon?
+                // Or just keep it all as HTML content
+                // Enhance: simple bold parsing **bold** -> <b>bold</b>
+                const htmlContent = parseRichText(content);
+
+                const newNode = { name: htmlContent, children: [] };
+
+                // Find parent
+                // Walk up the stack until we find a node with level < current level
+                while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+                    stack.pop();
+                }
+
+                const parent = stack[stack.length - 1].node;
+                parent.children.push(newNode);
+                stack.push({ node: newNode, level: level });
+            });
+
+            return root;
+        }
+
+        function parseRichText(text) {
+            // Convert **bold** to <b>bold</b>
+            let html = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            return html;
+        }
+
+        // ---- VISUALIZER ----
+        let svg, g, zoom;
+        let rootData, treeLayout;
+        let i = 0;
+        const duration = 750;
+
+        function initViz() {
+            const container = document.getElementById('viz-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            svg = d3.select("#viz-container").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .on("dblclick.zoom", null); // Disable double click zoom
+
+            g = svg.append("g")
+                .attr("transform", "translate(100,0)"); // Initial offset
+
+            zoom = d3.zoom().on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+            svg.call(zoom)
+               .call(zoom.transform, d3.zoomIdentity.translate(150, height/2).scale(0.8)); // Center vertically
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                svg.attr("width", container.clientWidth).attr("height", container.clientHeight);
+            });
+        }
+
+        function update(source) {
+            const treeRoot = d3.hierarchy(rootData, d => d.children);
+            
+            // Recompute tree layout
+            // We can calculate height based on number of expanded nodes to prevent overlap
+            let expandedCount = 0;
+            treeRoot.each(d => expandedCount++);
+            
+            const nodeHeight = 100;
+            const treeHeight = Math.max(800, expandedCount * 60);
+            
+            const tree = d3.tree().nodeSize([nodeHeight, 400]); // [height, width] spacing
+            
+            const treeData = tree(treeRoot);
+
+            // Compute the new tree layout
+            const nodes = treeData.descendants();
+            const links = treeData.links();
+
+            // Normalize for fixed-depth
+            nodes.forEach(d => { d.y = d.depth * 450; }); // Horizontal spacing
+
+            // ****************** Nodes section ***************************
+
+            const node = g.selectAll('g.node')
+                .data(nodes, d => d.id || (d.id = ++i));
+
+            // Enter any new modes at the parent's previous position.
+            const nodeEnter = node.enter().append('g')
+                .attr('class', 'node')
+                .attr("transform", d => `translate(${source.y0 || 0},${source.x0 || 0})`)
+                .on('click', click);
+
+            // Add ForeignObject for HTML content
+            const fo = nodeEnter.append('foreignObject')
+                .attr("width", 400) // Fixed width for content
+                .attr("height", 200) // Max height
+                .attr("x", -20) // Slightly offset to left relative to dot
+                .attr("y", -30); // Center vertically? 
+
+            const div = fo.append('xhtml:div')
+                .attr('class', 'node-content')
+                .html(d => `<div class="inner">${d.data.name}</div>`);
+            
+            // Auto-resize foreignObject based on content?
+            // This is tricky in D3. We set a generous height and user interaction makes it okay.
+            // Or we could measure. text wrapping is handled by HTML div.
+
+            // Transition nodes to their new position.
+            const nodeUpdate = node.merge(nodeEnter).transition()
+                .duration(duration)
+                .attr("transform", d => `translate(${d.y},${d.x})`);
+
+            // Update DOM content if needed (rarely needed unless data changes)
+             nodeEnter.select('.node-content').html(d => {
+                 // Check if it has children to show visual cue?
+                 const borderStyle = d._children ? "2px solid var(--accent-color)" : "1px solid var(--node-border)";
+                 const cursor = d.children || d._children ? "pointer" : "default";
+                 return `<div class="inner" style="border-left: ${borderStyle}; cursor: ${cursor}">${d.data.name}</div>`;
+             });
+
+            // Transition exiting nodes to the parent's new position.
+            const nodeExit = node.exit().transition()
+                .duration(duration)
+                .attr("transform", d => `translate(${source.y},${source.x})`)
+                .remove();
+
+            nodeExit.select('foreignObject').style('opacity', 0);
+
+            // ****************** Links section ***************************
+
+            const link = g.selectAll('path.link')
+                .data(links, d => d.target.id);
+
+            // Enter any new links at the parent's previous position.
+            const linkEnter = link.enter().insert('path', "g")
+                .attr("class", "link")
+                .attr('d', d => {
+                    const o = {x: source.x0 || 0, y: source.y0 || 0};
+                    return diagonal(o, o);
+                });
+
+            // Transition links to their new position.
+            link.merge(linkEnter).transition()
+                .duration(duration)
+                .attr('d', d => diagonal(d.source, d.target));
+
+            // Transition exiting nodes to the parent's new position.
+            link.exit().transition()
+                .duration(duration)
+                .attr('d', d => {
+                    const o = {x: source.x, y: source.y};
+                    return diagonal(o, o);
+                })
+                .remove();
+
+            // Store the old positions for transition.
+            nodes.forEach(d => {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+            
+            // Re-render MathJax
+            if (window.MathJax) {
+                 MathJax.typesetPromise().then(() => {
+                    // Adjust spacing if needed after rendering? 
+                    // Usually not needed if FO size is sufficient
+                });
+            }
+        }
+
+        // Curved path
+        function diagonal(s, d) {
+            return `M ${s.y} ${s.x}
+                    C ${(s.y + d.y) / 2} ${s.x},
+                      ${(s.y + d.y) / 2} ${d.x},
+                      ${d.y} ${d.x}`;
+        }
+
+        // Toggle children on click.
+        function click(event, d) {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            } else {
+                d.children = d._children;
+                d._children = null;
+            }
+            update(d);
+        }
+
+        function collapse(d) {
+            if(d.children) {
+                d._children = d.children;
+                d._children.forEach(collapse);
+                d.children = null;
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        function render() {
+            const text = document.getElementById('input-text').value;
+            const data = parseMarkdown(text);
+            
+            rootData = data;
+            rootData.x0 = 0;
+            rootData.y0 = 0;
+            
+            // Start with some nodes collapsed if it's too huge?
+            // For now, expand all
+            // Or collapse level 2+
+            // Helper to collapse recursively
+            /*
+            if (rootData.children) {
+                rootData.children.forEach(child => {
+                    if (child.children) {
+                        child.children.forEach(collapse);
+                    }
+                });
+            }*/
+
+            update(rootData);
+        }
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            initViz();
+            render();
+        });
+
+    </script>
+</body>
+</html>

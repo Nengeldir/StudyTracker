@@ -1,0 +1,18 @@
+{
+    "pai_pages_read": 258,
+    "dl_pages_read": 35,
+    "dl_project_pct": 35,
+    "aise_project_pct": 40,
+    "tasks": [
+        {
+            "text": "Email group about report writing",
+            "done": false,
+            "deadline": null
+        },
+        {
+            "text": "Create Mind Map template",
+            "done": false,
+            "deadline": null
+        }
+    ]
+}
