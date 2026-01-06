@@ -1,18 +1,28 @@
 {
-    "pai_pages_read": 258,
-    "dl_pages_read": 35,
-    "dl_project_pct": 35,
-    "aise_project_pct": 40,
+    "pai_pages_read": 417,
+    "dl_pages_read": 61,
+    "dl_project_pct": 45,
+    "aise_project_pct": 45,
     "tasks": [
         {
-            "text": "Email group about report writing",
+            "text": "Do Exercise 3 PAI",
             "done": false,
-            "deadline": null
+            "deadline": "2026-01-03"
         },
         {
-            "text": "Create Mind Map template",
+            "text": "Do Exercise 4 PAI",
             "done": false,
-            "deadline": null
+            "deadline": "2026-01-03"
+        },
+        {
+            "text": "Do Exercise 5 PAI",
+            "done": false,
+            "deadline": "2026-01-04"
+        },
+        {
+            "text": "Do Exercise 6 PAI",
+            "done": false,
+            "deadline": "2026-01-04"
         }
     ]
 }

@@ -230,7 +230,7 @@
         *   Uses gradients to bias proposals toward low-energy (high-probability) regions.
         *   **Unadjusted Langevin Algorithm (ULA):** $\theta_{k+1} = \theta_k - \nabla f(\theta_k)\Delta t_k + \sqrt{2\Delta t_k} \epsilon$, where $\epsilon \sim N(0, I)$.
         *   Decomposition: **Drift** (conformity to data) + **Noise** (curiosity/exploration).
-    *   **Stochastic Gradient Langevin Dynamics (SGLD):** Replaces exact gradients with mini-batch estimates, transitioning from stochastic gradient ascent to Langevin dynamics as the learning rate $\eta_t$ decreases.
+    *   **Stochastic Gradient Langevin Dynamics (SGLD):** Replaces exact gradients with mini-batch estimates, transitioning from stochastic gradient ascent to Langevin dynamics as the learning rate $\eta_t$ decreases. $\Delta \theta_t=\frac{\eta_t}{2}\left(\nabla \log p(\theta_t)+\frac{N}{n}\sum_{i=1}^{n}\nabla \log p(x_{t_i} \mid \theta_t)\right)+\epsilon_t$
     *   **Hamiltonian Monte Carlo (HMC):**
         *   Introduces auxiliary **momentum variables** $y \sim N(0, mI)$ to help the chain "jump" between modes.
         *   **Hamiltonian ($H$):** $H(x, y) = \frac{1}{2m} \|y\|_2^2 + f(x)$.

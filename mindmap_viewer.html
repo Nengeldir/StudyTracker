@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Mindmap Visualizer</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap"
+        rel="stylesheet">
+
     <!-- D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
@@ -116,9 +119,9 @@
         textarea::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         textarea::-webkit-scrollbar-thumb {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
         }
 
@@ -145,6 +148,46 @@
             border-color: var(--accent-color);
         }
 
+        /* Controls */
+        .controls-area {
+            padding: 15px;
+            border-bottom: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        #search-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--sidebar-border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            outline: none;
+        }
+
+        #search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .highlighted-node rect {
+            stroke: #ffeb3b !important;
+            stroke-width: 3px !important;
+            filter: drop-shadow(0 0 8px rgba(255, 235, 59, 0.5));
+        }
+
         /* Main Canvas */
         #viz-container {
             flex: 1;
@@ -169,12 +212,12 @@
             border-radius: 8px;
             color: var(--text-primary);
             font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             min-width: 150px;
             max-width: 400px;
             display: inline-block;
             /* Prevent selecting text while dragging */
-            user-select: none; 
+            user-select: none;
             cursor: pointer;
             transition: border-color 0.2s;
         }
@@ -209,10 +252,15 @@
         }
     </style>
 </head>
+
 <body>
 
     <div id="toggle-sidebar" onclick="toggleSidebar()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
     </div>
 
     <div id="sidebar">
@@ -220,7 +268,19 @@
             <h2>Mindmap Input</h2>
             <button class="btn" onclick="render()">Update Map</button>
         </div>
-        <textarea id="input-text" spellcheck="false">### **1.1 Probability**
+        <div class="controls-area">
+            <div class="control-row">
+                <label for="file-input" class="btn file-upload-label">Load MD</label>
+                <input type="file" id="file-input" accept=".md" style="display: none">
+            </div>
+            <div class="control-row">
+                <input type="text" id="search-input" placeholder="Search topic..."
+                    onkeydown="if(event.key==='Enter') searchTopic()">
+                <button class="btn" onclick="searchTopic()">Go</button>
+            </div>
+        </div>
+        <textarea id="input-text"
+            spellcheck="false">### **1.1 Probability**
 *   **1.1.1 Probability Spaces:** Triple $(\Omega, \mathcal{A}, P)$ where $\Omega$ is the sample space, $\mathcal{A}$ is a $\sigma$-algebra, and $P$ is a probability measure.
     *   **Kolmogorov Axioms:** $0 \le P(A) \le 1$; $P(\Omega) = 1$; and for disjoint events $P(\bigcup_{i=1}^\infty A_i) = \sum_{i=1}^\infty P(A_i)$.
 *   **1.1.2 Random Variables:** Function $X: \Omega \to T$. Probability $P(X \in S) = P(\{\omega \in \Omega : X(\omega) \in S\})$.
@@ -305,7 +365,7 @@
                     // We calculate indentation based on the raw line
                     // Assuming 4 spaces or 1 tab per level for simplicity in standard md
                     // But here we rely on the parser to just find the parent with lower level
-                    
+
                     // Simple logic: tab count or space count / 4
                     const leadingSpaces = line.match(/^\s*/)[0].length;
                     level = Math.floor(leadingSpaces / 2) + 1; // logical depth
@@ -366,7 +426,7 @@
             });
 
             svg.call(zoom)
-               .call(zoom.transform, d3.zoomIdentity.translate(150, height/2).scale(0.8)); // Center vertically
+                .call(zoom.transform, d3.zoomIdentity.translate(150, height / 2).scale(0.8)); // Center vertically
 
             // Handle Resize
             window.addEventListener('resize', () => {
@@ -374,34 +434,39 @@
             });
         }
 
+        // ---- STATE ----
+        let rootHierarchy;
+
         function update(source) {
-            const treeRoot = d3.hierarchy(rootData, d => d.children);
-            
+            if (!rootHierarchy) return;
+
+            const treeRoot = rootHierarchy;
+
             // Recompute tree layout
-            // We can calculate height based on number of expanded nodes to prevent overlap
             let expandedCount = 0;
             treeRoot.each(d => expandedCount++);
-            
-            const nodeHeight = 100;
-            const treeHeight = Math.max(800, expandedCount * 60);
-            
-            const tree = d3.tree().nodeSize([nodeHeight, 400]); // [height, width] spacing
-            
-            const treeData = tree(treeRoot);
+
+            const nodeHeight = 80;
+            // Limit height to reasonable bounds but ensuring enough space
+            const treeHeight = Math.max(800, expandedCount * nodeHeight);
+
+            const tree = d3.tree().nodeSize([nodeHeight, 400]);
+
+            tree(treeRoot);
 
             // Compute the new tree layout
-            const nodes = treeData.descendants();
-            const links = treeData.links();
+            const nodes = treeRoot.descendants();
+            const links = treeRoot.links();
 
             // Normalize for fixed-depth
-            nodes.forEach(d => { d.y = d.depth * 450; }); // Horizontal spacing
+            nodes.forEach(d => { d.y = d.depth * 400; });
 
             // ****************** Nodes section ***************************
 
             const node = g.selectAll('g.node')
                 .data(nodes, d => d.id || (d.id = ++i));
 
-            // Enter any new modes at the parent's previous position.
+            // Enter any new nodes at the parent's previous position.
             const nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr("transform", d => `translate(${source.y0 || 0},${source.x0 || 0})`)
@@ -409,31 +474,24 @@
 
             // Add ForeignObject for HTML content
             const fo = nodeEnter.append('foreignObject')
-                .attr("width", 400) // Fixed width for content
-                .attr("height", 200) // Max height
-                .attr("x", -20) // Slightly offset to left relative to dot
-                .attr("y", -30); // Center vertically? 
+                .attr("width", 380)
+                .attr("height", 200)
+                .attr("x", -20)
+                .attr("y", -30);
 
             const div = fo.append('xhtml:div')
                 .attr('class', 'node-content')
                 .html(d => `<div class="inner">${d.data.name}</div>`);
-            
-            // Auto-resize foreignObject based on content?
-            // This is tricky in D3. We set a generous height and user interaction makes it okay.
-            // Or we could measure. text wrapping is handled by HTML div.
 
             // Transition nodes to their new position.
             const nodeUpdate = node.merge(nodeEnter).transition()
                 .duration(duration)
                 .attr("transform", d => `translate(${d.y},${d.x})`);
 
-            // Update DOM content if needed (rarely needed unless data changes)
-             nodeEnter.select('.node-content').html(d => {
-                 // Check if it has children to show visual cue?
-                 const borderStyle = d._children ? "2px solid var(--accent-color)" : "1px solid var(--node-border)";
-                 const cursor = d.children || d._children ? "pointer" : "default";
-                 return `<div class="inner" style="border-left: ${borderStyle}; cursor: ${cursor}">${d.data.name}</div>`;
-             });
+            // Update DOM content visuals
+            nodeUpdate.select('.node-content').style('border-left', d => {
+                return d._children ? "3px solid var(--accent-color)" : "1px solid var(--node-border)";
+            }).style('cursor', d => (d.children || d._children) ? "pointer" : "default");
 
             // Transition exiting nodes to the parent's new position.
             const nodeExit = node.exit().transition()
@@ -452,7 +510,7 @@
             const linkEnter = link.enter().insert('path', "g")
                 .attr("class", "link")
                 .attr('d', d => {
-                    const o = {x: source.x0 || 0, y: source.y0 || 0};
+                    const o = { x: source.x0 || 0, y: source.y0 || 0 };
                     return diagonal(o, o);
                 });
 
@@ -461,11 +519,11 @@
                 .duration(duration)
                 .attr('d', d => diagonal(d.source, d.target));
 
-            // Transition exiting nodes to the parent's new position.
+            // Transition exiting nodes
             link.exit().transition()
                 .duration(duration)
                 .attr('d', d => {
-                    const o = {x: source.x, y: source.y};
+                    const o = { x: source.x, y: source.y };
                     return diagonal(o, o);
                 })
                 .remove();
@@ -475,13 +533,10 @@
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
-            
+
             // Re-render MathJax
             if (window.MathJax) {
-                 MathJax.typesetPromise().then(() => {
-                    // Adjust spacing if needed after rendering? 
-                    // Usually not needed if FO size is sufficient
-                });
+                MathJax.typesetPromise();
             }
         }
 
@@ -506,7 +561,7 @@
         }
 
         function collapse(d) {
-            if(d.children) {
+            if (d.children) {
                 d._children = d.children;
                 d._children.forEach(collapse);
                 d.children = null;
@@ -521,33 +576,130 @@
         function render() {
             const text = document.getElementById('input-text').value;
             const data = parseMarkdown(text);
-            
-            rootData = data;
-            rootData.x0 = 0;
-            rootData.y0 = 0;
-            
-            // Start with some nodes collapsed if it's too huge?
-            // For now, expand all
-            // Or collapse level 2+
-            // Helper to collapse recursively
-            /*
-            if (rootData.children) {
-                rootData.children.forEach(child => {
-                    if (child.children) {
-                        child.children.forEach(collapse);
-                    }
-                });
-            }*/
 
-            update(rootData);
+            // Re-initialize hierarchy
+            rootHierarchy = d3.hierarchy(data, d => d.children);
+            rootHierarchy.x0 = 0;
+            rootHierarchy.y0 = 0;
+
+            // Expand all by default (children are already in place)
+
+            update(rootHierarchy);
+        }
+
+        // ---- FILE LOADING ----
+        document.getElementById('file-input').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+                document.getElementById('input-text').value = content;
+                render();
+            };
+            reader.readAsText(file);
+        });
+
+        // ---- SEARCH ----
+        let lastQuery = "";
+        let searchMatches = [];
+        let currentMatchIndex = 0;
+
+        function searchTopic() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            if (!query) return;
+
+            // If new query, find all matches
+            if (query !== lastQuery) {
+                lastQuery = query;
+                searchMatches = [];
+                currentMatchIndex = 0;
+
+                // Recursive search
+                function collectMatches(d) {
+                    const text = d.data.name.replace(/<[^>]*>/g, '').toLowerCase();
+                    if (text.includes(query)) {
+                        searchMatches.push(d);
+                    }
+                    const children = d.children || d._children;
+                    if (children) {
+                        children.forEach(collectMatches);
+                    }
+                }
+
+                if (rootHierarchy) {
+                    collectMatches(rootHierarchy);
+                }
+
+                if (searchMatches.length === 0) {
+                    alert("Topic not found");
+                    return;
+                }
+            } else {
+                // Cycle to next match
+                currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
+            }
+
+            const foundNode = searchMatches[currentMatchIndex];
+
+            // Show progress if multiple matches
+            if (searchMatches.length > 1) {
+                console.log(`Showing match ${currentMatchIndex + 1} of ${searchMatches.length}`);
+                // Optional: update UI placeholder
+                document.getElementById('search-input').setAttribute('title', `Match ${currentMatchIndex + 1} of ${searchMatches.length}`);
+            }
+
+            if (foundNode) {
+                // Expand ancestors
+                let current = foundNode;
+                while (current.parent) {
+                    const p = current.parent;
+                    if (p._children) {
+                        p.children = p._children;
+                        p._children = null;
+                    }
+                    current = p;
+                }
+
+                // Update to show the node
+                update(rootHierarchy);
+
+                // Zoom to node
+                // Center visualization on foundNode
+                const scale = 1;
+                const width = document.getElementById('viz-container').clientWidth;
+                const height = document.getElementById('viz-container').clientHeight;
+
+                const t = d3.zoomIdentity
+                    .translate(width / 2, height / 2)
+                    .scale(scale)
+                    .translate(-foundNode.y, -foundNode.x);
+
+                svg.transition().duration(750).call(zoom.transform, t);
+
+                // Highlight visual
+                // Clean previous highlights
+                d3.selectAll('.node-content').style('border-color', null).style('box-shadow', null);
+
+                g.selectAll('.node')
+                    .filter(d => d === foundNode)
+                    .select('.node-content')
+                    .style('border-color', '#ffeb3b')
+                    .style('box-shadow', '0 0 20px rgba(255, 235, 59, 0.6)')
+                    .transition().duration(2500)
+                    .style('border-color', 'var(--node-border)')
+                    .style('box-shadow', '0 4px 12px rgba(0,0,0,0.2)');
+            }
         }
 
         // Init
         window.addEventListener('DOMContentLoaded', () => {
             initViz();
+            // Initial render with default text
             render();
         });
-
     </script>
 </body>
+
 </html>
