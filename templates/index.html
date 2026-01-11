@@ -103,6 +103,16 @@
             transform: translateY(-1px);
         }
 
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(100, 108, 255, 0.1);
+        }
+
         textarea {
             flex: 1;
             background: transparent;
@@ -265,72 +275,20 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2>Mindmap Input</h2>
-            <button class="btn" onclick="render()">Update Map</button>
+            <h2>Mindmap</h2>
+            <div style="display: flex; gap: 5px;">
+                <button class="btn btn-outline" onclick="saveNotes()" title="Save to file">💾</button>
+                <button class="btn" onclick="render()">Update Map</button>
+            </div>
         </div>
         <div class="controls-area">
-            <div class="control-row">
-                <label for="file-input" class="btn file-upload-label">Load MD</label>
-                <input type="file" id="file-input" accept=".md" style="display: none">
-            </div>
             <div class="control-row">
                 <input type="text" id="search-input" placeholder="Search topic..."
                     onkeydown="if(event.key==='Enter') searchTopic()">
                 <button class="btn" onclick="searchTopic()">Go</button>
             </div>
         </div>
-        <textarea id="input-text"
-            spellcheck="false">### **1.1 Probability**
-*   **1.1.1 Probability Spaces:** Triple $(\Omega, \mathcal{A}, P)$ where $\Omega$ is the sample space, $\mathcal{A}$ is a $\sigma$-algebra, and $P$ is a probability measure.
-    *   **Kolmogorov Axioms:** $0 \le P(A) \le 1$; $P(\Omega) = 1$; and for disjoint events $P(\bigcup_{i=1}^\infty A_i) = \sum_{i=1}^\infty P(A_i)$.
-*   **1.1.2 Random Variables:** Function $X: \Omega \to T$. Probability $P(X \in S) = P(\{\omega \in \Omega : X(\omega) \in S\})$.
-*   **1.1.3 Distributions:**
-    *   **PMF (Discrete):** $p_X(x) = P(X = x)$.
-    *   **CDF:** $P_X(x) = P(X \le x)$.
-*   **1.1.4 Continuous Distributions:** Defined by PDF $p_X$ s.t. mass $m(M) = \int_M p_X(x) dx$.
-    *   **Univariate Normal:** $N(x; \mu, \sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp \left( - \frac{(x-\mu)^2}{2\sigma^2} \right)$.
-*   **1.1.5 Joint Probability:** $P(A, B) = P(A \cap B)$.
-    *   **Sum Rule (Marginalization):** $p(x_{1:i-1}, x_{i+1:n}) = \int p(x_{1:n}) dx_i$.
-*   **1.1.6 Conditional Probability:**
-    *   **Definition:** $P(A | B) = \frac{P(A, B)}{P(B)}$.
-    *   **Product/Chain Rule:** $p(x_{1:n}) = p(x_1) \prod_{i=2}^n p(x_i | x_{1:i-1})$.
-    *   **Law of Total Probability (LOTP):** $p(x) = \int p(x | y) p(y) dy$.
-*   **1.1.7 Independence:**
-    *   **Independent ($X \perp Y$):** $p(x, y) = p(x)p(y)$.
-    *   **Conditionally Independent ($X \perp Y | Z$):** $p(x, y | z) = p(x | z)p(y | z)$.
-*   **1.1.8 Directed Graphical Models:** Generative model factorization: $p(x_{1:n}) = \prod_{i=1}^n p(x_i | \text{parents}(x_i))$.
-*   **1.1.9 Expectation:** $E[X] = \int x \cdot p(x) dx$.
-    *   **Linearity:** $E[AX + b] = AE[X] + b$.
-    *   **LOTUS:** $E[g(X)] = \int g(x) p(x) dx$.
-    *   **Tower Rule (LOTE):** $E[X] = E_Y[E_X[X | Y]]$.
-*   **1.1.10 Covariance and Variance:**
-    *   **Covariance:** $\text{Cov}[X, Y] = E[(X-E[X])(Y-E[Y])^\top] = E[XY^\top] - E[X]E[Y]^\top$.
-    *   **Variance:** $\text{Var}[X] = \text{Cov}[X, X]$.
-    *   **Properties:** $\text{Var}[AX+b] = A\text{Var}[X]A^\top$ and $\text{Var}[X+Y] = \text{Var}[X] + \text{Var}[Y] + 2\text{Cov}[X, Y]$.
-    *   **Law of Total Variance (LOTV):** $\text{Var}[X] = E_Y[\text{Var}_X[X | Y]] + \text{Var}_Y[E_X[X | Y]]$.
-*   **1.1.11 Change of Variables:** For $Y = g(X)$, $p_Y(y) = p_X(g^{-1}(y)) \cdot |\det(D g^{-1}(y))|$.
-
-### **1.2 Probabilistic Inference**
-*   **Bayes’ Rule:** $p(x | y) = \frac{p(y | x) p(x)}{p(y)}$ where $p(x | y)$ is the posterior, $p(x)$ the prior, $p(y | x)$ the likelihood, and $p(y)$ the marginal likelihood/normalizing constant.
-*   **Maximum Entropy Principle:** Select prior with least additional assumptions by maximizing $H[p] = E_{x \sim p}[-\log p(x)]$.
-*   **1.2.3 Normal Distribution Inference:** For Gaussian random vector $X \sim N(\mu, \Sigma)$:
-    *   **Multivariate PDF:** $N(x; \mu, \Sigma) = \frac{1}{\sqrt{\det(2\pi\Sigma)}} \exp \left( -\frac{1}{2} (x-\mu)^\top \Sigma^{-1} (x-\mu) \right)$.
-    *   **Conditioning:** $X_A | X_B = x_B \sim N(\mu_{A|B}, \Sigma_{A|B})$ with:
-        *   $\mu_{A|B} = \mu_A + \Sigma_{AB}\Sigma_{BB}^{-1}(x_B - \mu_B)$
-        *   $\Sigma_{A|B} = \Sigma_{AA} - \Sigma_{AB}\Sigma_{BB}^{-1}\Sigma_{BA}$
-
-### **1.3 Supervised Learning and Point Estimates**
-*   **Model:** $y_i = f_\theta(x_i) + \epsilon_i$.
-*   **Maximum Likelihood (MLE):** $\hat{\theta}_{MLE} = \text{arg max}_\theta \sum_{i=1}^n \log p(y_i | x_i, \theta)$.
-*   **Maximum A Posteriori (MAP):** $\hat{\theta}_{MAP} = \text{arg min}_\theta [-\log p(\theta) + \ell_{nll}(\theta; D_n)]$ where $\log p(\theta)$ acts as a regularizer.
-*   **Predictive Posterior:** $p(y^* | x^*, D_n) = \int p(y^* | x^*, \theta) p(\theta | D_n) d\theta$.
-*   **Credible Set:** $P(y^* \in C_\delta(x^*) | x^*, D_n) \ge 1 - \delta$.
-*   **Recursive Update:** $p^{(t+1)}(\theta) \propto p^{(t)}(\theta) \cdot p(y_{t+1} | \theta)$.
-
-### **1.4 Outlook: Decision Theory**
-*   **Optimal Decision Rule:** $a^*(x) = \text{arg max}_{a \in A} E_{y|x}[r(y, a)]$.
-*   **Squared Loss:** Optimal action is the mean $a^*(x) = E[y | x]$.
-*   **Asymmetric Loss:** Penalizes under/overestimation differently; for Gaussian $y|x$, $a^*(x) = \mu_x + \sigma_x \cdot \Phi^{-1} \left( \frac{c_1}{c_1 + c_2} \right)$</textarea>
+        <textarea id="input-text" spellcheck="false" placeholder="Loading notes..."></textarea>
     </div>
 
     <div id="viz-container"></div>
@@ -338,6 +296,7 @@
     <script>
         // ---- PARSER ----
         function parseMarkdown(text) {
+            if (!text) return { name: "Root", children: [] };
             const lines = text.split('\n');
             const root = { name: "Root", children: [] };
             const stack = [{ node: root, level: -1 }]; // Level -1 for root
@@ -361,12 +320,6 @@
                     level = 0; // Headers are top level children of Root
                     content = line.replace(/^#+\s*/, '');
                 } else if (line.trim().startsWith('*')) {
-                    // It's a list item
-                    // We calculate indentation based on the raw line
-                    // Assuming 4 spaces or 1 tab per level for simplicity in standard md
-                    // But here we rely on the parser to just find the parent with lower level
-
-                    // Simple logic: tab count or space count / 4
                     const leadingSpaces = line.match(/^\s*/)[0].length;
                     level = Math.floor(leadingSpaces / 2) + 1; // logical depth
                     content = line.trim().replace(/^\*\s*/, '');
@@ -374,16 +327,10 @@
                     return; // Skip other lines
                 }
 
-                // Node object structure
-                // We split content into title and details if there's a colon?
-                // Or just keep it all as HTML content
-                // Enhance: simple bold parsing **bold** -> <b>bold</b>
                 const htmlContent = parseRichText(content);
-
                 const newNode = { name: htmlContent, children: [] };
 
                 // Find parent
-                // Walk up the stack until we find a node with level < current level
                 while (stack.length > 0 && stack[stack.length - 1].level >= level) {
                     stack.pop();
                 }
@@ -397,7 +344,6 @@
         }
 
         function parseRichText(text) {
-            // Convert **bold** to <b>bold</b>
             let html = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             return html;
         }
@@ -416,19 +362,18 @@
             svg = d3.select("#viz-container").append("svg")
                 .attr("width", width)
                 .attr("height", height)
-                .on("dblclick.zoom", null); // Disable double click zoom
+                .on("dblclick.zoom", null);
 
             g = svg.append("g")
-                .attr("transform", "translate(100,0)"); // Initial offset
+                .attr("transform", "translate(100,0)");
 
             zoom = d3.zoom().on("zoom", (event) => {
                 g.attr("transform", event.transform);
             });
 
             svg.call(zoom)
-                .call(zoom.transform, d3.zoomIdentity.translate(150, height / 2).scale(0.8)); // Center vertically
+                .call(zoom.transform, d3.zoomIdentity.translate(150, height / 2).scale(0.8));
 
-            // Handle Resize
             window.addEventListener('resize', () => {
                 svg.attr("width", container.clientWidth).attr("height", container.clientHeight);
             });
@@ -442,37 +387,30 @@
 
             const treeRoot = rootHierarchy;
 
-            // Recompute tree layout
             let expandedCount = 0;
             treeRoot.each(d => expandedCount++);
 
             const nodeHeight = 80;
-            // Limit height to reasonable bounds but ensuring enough space
             const treeHeight = Math.max(800, expandedCount * nodeHeight);
 
             const tree = d3.tree().nodeSize([nodeHeight, 400]);
 
             tree(treeRoot);
 
-            // Compute the new tree layout
             const nodes = treeRoot.descendants();
             const links = treeRoot.links();
 
-            // Normalize for fixed-depth
             nodes.forEach(d => { d.y = d.depth * 400; });
 
-            // ****************** Nodes section ***************************
-
+            // Nodes
             const node = g.selectAll('g.node')
                 .data(nodes, d => d.id || (d.id = ++i));
 
-            // Enter any new nodes at the parent's previous position.
             const nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
                 .attr("transform", d => `translate(${source.y0 || 0},${source.x0 || 0})`)
                 .on('click', click);
 
-            // Add ForeignObject for HTML content
             const fo = nodeEnter.append('foreignObject')
                 .attr("width", 380)
                 .attr("height", 200)
@@ -483,17 +421,14 @@
                 .attr('class', 'node-content')
                 .html(d => `<div class="inner">${d.data.name}</div>`);
 
-            // Transition nodes to their new position.
             const nodeUpdate = node.merge(nodeEnter).transition()
                 .duration(duration)
                 .attr("transform", d => `translate(${d.y},${d.x})`);
 
-            // Update DOM content visuals
             nodeUpdate.select('.node-content').style('border-left', d => {
                 return d._children ? "3px solid var(--accent-color)" : "1px solid var(--node-border)";
             }).style('cursor', d => (d.children || d._children) ? "pointer" : "default");
 
-            // Transition exiting nodes to the parent's new position.
             const nodeExit = node.exit().transition()
                 .duration(duration)
                 .attr("transform", d => `translate(${source.y},${source.x})`)
@@ -501,12 +436,10 @@
 
             nodeExit.select('foreignObject').style('opacity', 0);
 
-            // ****************** Links section ***************************
-
+            // Links
             const link = g.selectAll('path.link')
                 .data(links, d => d.target.id);
 
-            // Enter any new links at the parent's previous position.
             const linkEnter = link.enter().insert('path', "g")
                 .attr("class", "link")
                 .attr('d', d => {
@@ -514,12 +447,10 @@
                     return diagonal(o, o);
                 });
 
-            // Transition links to their new position.
             link.merge(linkEnter).transition()
                 .duration(duration)
                 .attr('d', d => diagonal(d.source, d.target));
 
-            // Transition exiting nodes
             link.exit().transition()
                 .duration(duration)
                 .attr('d', d => {
@@ -528,19 +459,16 @@
                 })
                 .remove();
 
-            // Store the old positions for transition.
             nodes.forEach(d => {
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
 
-            // Re-render MathJax
             if (window.MathJax) {
                 MathJax.typesetPromise();
             }
         }
 
-        // Curved path
         function diagonal(s, d) {
             return `M ${s.y} ${s.x}
                     C ${(s.y + d.y) / 2} ${s.x},
@@ -548,7 +476,6 @@
                       ${d.y} ${d.x}`;
         }
 
-        // Toggle children on click.
         function click(event, d) {
             if (d.children) {
                 d._children = d.children;
@@ -577,53 +504,53 @@
             const text = document.getElementById('input-text').value;
             const data = parseMarkdown(text);
 
-            // Re-initialize hierarchy
             rootHierarchy = d3.hierarchy(data, d => d.children);
             rootHierarchy.x0 = 0;
             rootHierarchy.y0 = 0;
 
-            // Expand all by default (children are already in place)
-
             update(rootHierarchy);
         }
 
-        // ---- FILE LOADING ----
-        document.getElementById('file-input').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        // ---- API INTEGRATION ----
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const content = e.target.result;
-                document.getElementById('input-text').value = content;
-                render();
-            };
-            reader.readAsText(file);
-        });
-
-        // Auto-load MindmapNotes.md
-        async function autoLoadNotes() {
+        async function loadNotes() {
             try {
-                const response = await fetch('MindmapNotes.md');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const text = await response.text();
-                document.getElementById('input-text').value = text;
+                const response = await fetch('/api/notes');
+                if (!response.ok) throw new Error("Failed to fetch notes");
+                const data = await response.json();
+                document.getElementById('input-text').value = data.content || "";
                 render();
-                console.log('Successfully auto-loaded MindmapNotes.md');
             } catch (e) {
-                console.warn('Could not auto-load MindmapNotes.md:', e);
-                console.info('Tip: To enable auto-loading, serve this directory via a web server (e.g., "python -m http.server") or allow local file access.');
+                console.error("Error loading notes:", e);
+                alert("Error loading notes: " + e.message);
             }
         }
 
-        // Init
-        window.addEventListener('DOMContentLoaded', () => {
-            initViz();
-            // Try to auto-load, otherwise default text will remain
-            autoLoadNotes();
-        });
+        async function saveNotes() {
+            const content = document.getElementById('input-text').value;
+            try {
+                const response = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                if (!response.ok) throw new Error("Failed to save notes");
+
+                // Visual feedback
+                const btn = document.querySelector('button[title="Save to file"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "✅";
+                setTimeout(() => btn.innerHTML = originalText, 1500);
+
+            } catch (e) {
+                console.error("Error saving notes:", e);
+                alert("Error saving notes: " + e.message);
+            }
+        }
+
+        // ---- SEARCH ----
         let lastQuery = "";
         let searchMatches = [];
         let currentMatchIndex = 0;
@@ -632,13 +559,11 @@
             const query = document.getElementById('search-input').value.toLowerCase();
             if (!query) return;
 
-            // If new query, find all matches
             if (query !== lastQuery) {
                 lastQuery = query;
                 searchMatches = [];
                 currentMatchIndex = 0;
 
-                // Recursive search
                 function collectMatches(d) {
                     const text = d.data.name.replace(/<[^>]*>/g, '').toLowerCase();
                     if (text.includes(query)) {
@@ -659,21 +584,17 @@
                     return;
                 }
             } else {
-                // Cycle to next match
                 currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
             }
 
             const foundNode = searchMatches[currentMatchIndex];
 
-            // Show progress if multiple matches
             if (searchMatches.length > 1) {
                 console.log(`Showing match ${currentMatchIndex + 1} of ${searchMatches.length}`);
-                // Optional: update UI placeholder
                 document.getElementById('search-input').setAttribute('title', `Match ${currentMatchIndex + 1} of ${searchMatches.length}`);
             }
 
             if (foundNode) {
-                // Expand ancestors
                 let current = foundNode;
                 while (current.parent) {
                     const p = current.parent;
@@ -684,24 +605,18 @@
                     current = p;
                 }
 
-                // Update to show the node
                 update(rootHierarchy);
 
-                // Zoom to node
-                // Center visualization on foundNode
-                const scale = 1;
                 const width = document.getElementById('viz-container').clientWidth;
                 const height = document.getElementById('viz-container').clientHeight;
 
                 const t = d3.zoomIdentity
                     .translate(width / 2, height / 2)
-                    .scale(scale)
+                    .scale(1)
                     .translate(-foundNode.y, -foundNode.x);
 
                 svg.transition().duration(750).call(zoom.transform, t);
 
-                // Highlight visual
-                // Clean previous highlights
                 d3.selectAll('.node-content').style('border-color', null).style('box-shadow', null);
 
                 g.selectAll('.node')
@@ -715,7 +630,11 @@
             }
         }
 
-
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            initViz();
+            loadNotes();
+        });
     </script>
 </body>
 
